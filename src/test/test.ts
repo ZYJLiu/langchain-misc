@@ -1,9 +1,10 @@
 //  npm run start ./test/test.ts
 import { OpenAI, OpenAIChat } from "langchain/llms"
 import { PromptTemplate } from "langchain/prompts"
-import { LLMChain } from "langchain/chains"
+import { LLMChain, ConversationChain } from "langchain/chains"
 import { CallbackManager } from "langchain/callbacks"
 import { LLMResult } from "langchain/schema"
+import { BufferMemory } from "langchain/memory"
 
 export async function run() {
   const callbackManager = CallbackManager.fromHandlers({
@@ -33,13 +34,32 @@ export async function run() {
     callbackManager,
   })
 
-  const template =
-    "Provide {number} good names for a company that makes {product}? And explain why"
-  const prompt = new PromptTemplate({
-    template: template,
-    inputVariables: ["product", "number"],
+  // const template = "{input}"
+  // const prompt = new PromptTemplate({
+  //   template: template,
+  //   inputVariables: ["input"],
+  // })
+
+  const memory = new BufferMemory({
+    // returnMessages: true,
+    // memoryKey: "chat_history",
   })
-  const chain = new LLMChain({ llm: model, prompt: prompt })
-  const res = await chain.call({ product: "Yummy snacks", number: 2 })
+  const chain = new ConversationChain({
+    llm: model,
+    // prompt: prompt,
+    memory: memory,
+  })
+  const res = await chain.call({
+    input: "What is the best yummy snack?",
+  })
   console.log({ res })
+  const res2 = await chain.call({
+    input: "What was the previous question?",
+  })
+  console.log({ res2 })
+  const res3 = await chain.call({
+    input:
+      "What was the first question? What was the previous question before this one?",
+  })
+  console.log({ res3 })
 }
